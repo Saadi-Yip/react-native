@@ -41,7 +41,7 @@ export default NextAuth({
     GoogleProvider({
       clientId: '658610802573-0sr6lgevgmutajr5mrgq6cfkicmfjqoa.apps.googleusercontent.com',
       clientSecret: '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',
-      redirectUri: 'http://localhost:3000/api/auth/callback/google', // Add the redirect URI here
+      redirectUri: 'http://localhost:3000/api/auth/callback/google', 
     }),
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID,
