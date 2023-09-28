@@ -3,11 +3,10 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import FacebookProvider from 'next-auth/providers/facebook';
 import GitHubProvider from 'next-auth/providers/github';
-import TwitterProvider from 'next-auth/providers/twitter';
+import TwitchProvider from "next-auth/providers/twitch";
 import LinkedInProvider from 'next-auth/providers/linkedin';
-import AppleProvider from 'next-auth/providers/apple';
-import DiscordProvider from 'next-auth/providers/discord'; 
- 
+import InstagramProvider from 'next-auth/providers/instagram';
+import DiscordProvider from 'next-auth/providers/discord';
 
 
 export default NextAuth({
@@ -19,7 +18,7 @@ export default NextAuth({
         password: { type: 'password' }, // Removed the label, as it's not needed here
       },
       async authorize(credentials) {
-        try { 
+        try {
           const res = await fetch("https://backend-yip.cyclic.app/login", {
             method: 'POST',
             body: JSON.stringify(credentials),
@@ -31,17 +30,17 @@ export default NextAuth({
           // Check if the authentication was successful
           if (!res.ok || !data) {
             throw new Error(data.message); // Throw an error on failed login
-          } 
-           return data;
+          }
+          return data;
         } catch (error) {
           throw new Error(error.message);
         }
       },
     }),
     GoogleProvider({
-      clientId: '658610802573-0sr6lgevgmutajr5mrgq6cfkicmfjqoa.apps.googleusercontent.com',
-      clientSecret: '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',
-      redirectUri: 'http://localhost:3000/api/auth/callback/google', 
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+
     }),
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID,
@@ -51,55 +50,50 @@ export default NextAuth({
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
     }),
-    TwitterProvider({
-      clientId: process.env.TWITTER_CLIENT_ID,
-      clientSecret: process.env.TWITTER_CLIENT_SECRET,
-    }),
+    TwitchProvider({
+      clientId: process.env.TWITCH_CLIENT_ID,
+      clientSecret: process.env.TWITCH_CLIENT_SECRET
+    }),  
     LinkedInProvider({
       clientId: process.env.LINKEDIN_CLIENT_ID,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
     }),
-    AppleProvider({
-      clientId: process.env.APPLE_CLIENT_ID,
-      clientSecret: {
-        appleId: process.env.APPLE_ID,
-        teamId: process.env.APPLE_TEAM_ID,
-        privateKey: process.env.APPLE_PRIVATE_KEY,
-        keyId: process.env.APPLE_KEY_ID,
-      },
+    InstagramProvider({
+      clientId: process.env.FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET
     }),
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET
-    }) 
+    })
   ],
+  secret: process.env.JWT_SECRET,
   session: { jwt: true },
-  callbacks: { 
+  callbacks: {
     async signIn({ user, account, profile, email, credentials }) {
-      return true;
+      return true
     },
-    async jwt({ token, account }) {
-      if (account) {
-        token.accessToken = account.access_token;
-      }
-      return token;
+    async redirect({ url, baseUrl }) {
+      return baseUrl
     },
-    async session({ session, token, user }) {
-      session.accessToken = token.accessToken;
-      return session;
+    async session({ session, user, token }) {
+      return session
+    },
+    async jwt({ token, user, account, profile, isNewUser }) {
+      return token
     },
     async onError(error, context) {
       console.error('Authentication error:', error);
       return null;
     },
- 
+
     async credentialsError(error, context) {
       console.error('Credentials authentication error:', error);
       return null;
     },
   },
 });
-  
+
 
 
 

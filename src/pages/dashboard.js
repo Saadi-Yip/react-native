@@ -1,13 +1,14 @@
 // pages/dashboard.js
 import { requireAuth } from '@/utils/requireAuth';
 import { signOut } from 'next-auth/react'
+import Layout from './../components/layout/Layout';
 function DashboardPage({ session }) {
     return (
-        <div>
+        <Layout>
             <h1>Dashboard</h1>
-            <p>Welcome, {session?.user?.name}!</p>
+            <p>Welcome, {session?.user?.email}!</p>
             <button onClick={() => signOut()}>Logout</button>
-        </div>
+        </Layout>
     );
 }
 
