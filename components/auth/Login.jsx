@@ -3,18 +3,18 @@ import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { BsFillEyeFill, BsFillEyeSlashFill } from 'react-icons/bs';
-import { FaGithub, FaGoogle, FaSignInAlt } from 'react-icons/fa';
+import { FaFacebook, FaGithub, FaGoogle, FaSignInAlt } from 'react-icons/fa';
 const Login = () => {
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
     const { data: session, status } = useSession();
     if (status === 'authenticated') {
-        console.log(status);
         router.push('/')
     }
 
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
-    const [errors, setErrors] = useState({ email: '', password: '', general: '' }); // State to store error messages
+    const [errors, setErrors] = useState({ email: '', password: '', general: '' });  
 
 
     const handleChange = (e) => {
@@ -28,45 +28,55 @@ const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-
+    
+        setLoading(true);
+    
         const { email, password } = formData;
         if (!email) {
             setErrors({ ...errors, email: 'Email is required' });
+            setLoading(false);
             return;
         }
-
+    
         if (!password) {
             setErrors({ ...errors, password: 'Password is required' });
+            setLoading(false);
             return;
         }
-        const result = await signIn('credentials', {
-            email,
-            password,
-            redirect: false,
-        });
-
-        if (result.error) {
-            console.error(result.error);
-            setErrors({ ...errors, general: result.error });
-        } else {
-            router.push('/');
+    
+        try {
+            const result = await signIn('credentials', {
+                email,
+                password,
+                redirect: false,
+            });
+    
+            if (result.error) {
+                console.error(result.error);
+                setErrors({ ...errors, general: result.error });
+            } else {
+                router.push('/');
+            }
+        } catch (error) {
+            
+            console.error(error);
+        } finally { 
+            setLoading(false);
         }
     };
-
+    
 
     return (
         <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
             <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex justify-center flex-1">
                 <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-12">
-                    <div>
-                        <img src="https://storage.googleapis.com/devitary-image-host.appspot.com/15846435184459982716-LogoMakr_7POjrN.png" className="w-32 mx-auto" alt="Logo" />
-                    </div>
-                    <div className="mt-12 flex flex-col items-center">
-                        <h1 className="text-2xl xl:text-3xl font-extrabold">
+                    {loading && <Loader />}
+                    <div className="flex flex-col items-center">
+                        <h1 className="text-2xl xl:text-3xl font-extrabold text-indigo-500">
                             Sign In
                         </h1>
                         <div className="w-full flex-1 mt-8">
-                            <div className="flex flex-col items-center">
+                            <div className="flex flex-col items-center gap-4">
                                 <button onClick={() => signIn('google')} className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline">
                                     <div className="bg-white p-2 rounded-full">
                                         <FaGoogle className="w-4 h-4" />
@@ -74,9 +84,18 @@ const Login = () => {
                                     <span className="ml-4">
                                         Sign In with Google
                                     </span>
-                                </button>
 
-                                <button onClick={() => signIn('github')} className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline mt-5">
+                                </button>
+                                <button onClick={() => signIn('facebook')} className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline">
+                                    <div className="bg-white p-2 rounded-full">
+                                        <FaFacebook className="w-4 h-4" />
+                                    </div>
+                                    <span className="ml-4">
+                                        Sign In with Facebook
+                                    </span>
+
+                                </button>
+                                <button onClick={() => signIn('github')} className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline">
                                     <div className="bg-white p-1 rounded-full">
                                         <FaGithub className="w-6 h-6" />
                                     </div>
@@ -134,16 +153,7 @@ const Login = () => {
                                 {errors.general && (
                                     <p className="mt-2 text-red-500 text-sm">{errors.general}</p>
                                 )}
-                                <p className="mt-6 text-xs text-gray-600 text-center">
-                                    I agree to abide by templatana's
-                                    <a href="#" className="border-b border-gray-500 border-dotted">
-                                        Terms of Service
-                                    </a>
-                                    and its
-                                    <a href="#" className="border-b border-gray-500 border-dotted">
-                                        Privacy Policy
-                                    </a>
-                                </p>
+
                             </div>
                         </div>
                     </div>
@@ -159,3 +169,7 @@ const Login = () => {
 }
 
 export default Login;
+import React from 'react';
+import Loader from '../global/Loader';
+
+

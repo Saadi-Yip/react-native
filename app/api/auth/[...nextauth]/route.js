@@ -2,9 +2,10 @@ import { connectToDB } from "@/lib/database";
 import User from "@/models/user";
 import NextAuth from "next-auth/next";
 import GoogleProvider from 'next-auth/providers/google';
+import FacebookProvider from 'next-auth/providers/facebook';
 import GithubProvider from 'next-auth/providers/github';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import bcrypt from "bcrypt";
+
 
 const handler = NextAuth({
     providers: [
@@ -15,6 +16,10 @@ const handler = NextAuth({
         GithubProvider({
             clientId: process.env.GITHUB_CLIENT_ID,
             clientSecret: process.env.GITHUB_CLIENT_SECRET
+        }),
+        FacebookProvider({
+            clientId: process.env.FACEBOOK_CLIENT_ID,
+            clientSecret: process.env.FACEBOOK_CLIENT_SECRET
         }),
         CredentialsProvider({
             name: 'Credentials',
@@ -29,34 +34,45 @@ const handler = NextAuth({
                         const user = await User.findOne({
                             email: credentials.email
                         });
+                        console.log(user);
                         if (!user) {
                             throw new Error('User not found');
                         }
 
-                        const storedHashedPassword = user.password;
-
                         // Compare the provided password with the stored hashed password
-                        const passwordMatches = await bcrypt.compare(credentials.password, storedHashedPassword);
+                        const passwordMatches = await user.password == credentials.password;
+                        // const passwordMatches = await bcrypt.compare(credentials.password, storedHashedPassword);
 
                         if (!passwordMatches) {
                             throw new Error('Invalid password');
                         }
-                        return { id: user._id.toString(), name: user.username, email: user.email };
+                        return { id: user._id.toString(), name: user.username, email: user.email, image: user.image, image_id: user.image_id, role: user.role };
                     }
 
 
                 } catch (error) {
-                    return { error: error.message };  
+                    console.log(error);
+                    return { error: error.message };
                 }
             }
         })
     ],
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
-        async session({ session }) {
+         async jwt({ token, user, trigger, session }) {
+                if (trigger === 'update') {
+                    return { ...token, ...session.user }
+                }
+                return { ...token, ...user }
+            },
+        async session({ session, token }) {
+            
             const sessionUser = await User.findOne({
                 email: session.user.email
             })
+            console.log(sessionUser);
+            token.role = sessionUser ?  sessionUser?.role : 'user';
+            session.user.role = sessionUser?.role;
             session.user.id = sessionUser._id.toString();
             return session;
         },
@@ -64,9 +80,9 @@ const handler = NextAuth({
         async signIn({ profile }) {
             try {
                 await connectToDB();
-                const userExists = await User.findOne({
+                 const userExists = await User.findOne({
                     email: profile.email
-                });
+                }); 
 
                 if (!userExists) {
                     await User.create({
@@ -75,10 +91,10 @@ const handler = NextAuth({
                         image: profile.picture
                     })
                 }
-
                 return true;
             } catch (error) {
-                return false;
+                return { error: error.message };
+
             }
         }
     }

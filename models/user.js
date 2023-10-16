@@ -13,9 +13,18 @@ const UserSchema = new Schema({
     },
     password: { 
         type: String, 
+        default: 12345678
     },
     image: {
         type: String,
+    },
+    image_id: {
+        type: String,
+    },
+    role: {
+        type: String,
+        enum: ['admin', 'user', 'moderator'],
+        default: 'user'
     }
 });
  
